@@ -17,6 +17,7 @@ use Symfony\Component\Form\Exception\RuntimeException;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -27,7 +28,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class ParentEntityAutocompleteType extends AbstractType implements DataMapperInterface
 {
     public function __construct(
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private UriSigner $uriSigner,
     ) {
     }
 
@@ -43,8 +45,12 @@ final class ParentEntityAutocompleteType extends AbstractType implements DataMap
         // Use the provided URL, or auto-generate from the provided alias
         $autocompleteUrl = $options['autocomplete_url'] ?? $this->urlGenerator->generate($attribute->getRoute(), [
             'alias' => $attribute->getAlias() ?: AsEntityAutocompleteField::shortName(\get_class($formType)),
+            'query' => '',
             'query_context' => $options['query_context'],
         ]);
+
+        // Sign the URL to ensure the user can't tamper with it
+        $autocompleteUrl = $this->uriSigner->sign($autocompleteUrl);
 
         $builder
             ->addEventSubscriber(new AutocompleteEntityTypeSubscriber($autocompleteUrl))

@@ -14,7 +14,9 @@ namespace Symfony\UX\Autocomplete\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\UriSigner;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\Autocomplete\AutocompleteResultsExecutor;
 use Symfony\UX\Autocomplete\AutocompleterRegistry;
@@ -28,11 +30,16 @@ final class EntityAutocompleteController
         private AutocompleterRegistry $autocompleteFieldRegistry,
         private AutocompleteResultsExecutor $autocompleteResultsExecutor,
         private UrlGeneratorInterface $urlGenerator,
+        private UriSigner $uriSigner,
     ) {
     }
 
     public function __invoke(string $alias, Request $request): Response
     {
+        if (!$this->uriSigner->check($request->getRequestUri())) {
+            throw new BadRequestHttpException('Invalid URI signature.');
+        }
+
         $autocompleter = $this->autocompleteFieldRegistry->getAutocompleter($alias);
         if (!$autocompleter) {
             throw new NotFoundHttpException(sprintf('No autocompleter found for "%s". Available autocompleters are: (%s)', $alias, implode(', ', $this->autocompleteFieldRegistry->getAutocompleterNames())));

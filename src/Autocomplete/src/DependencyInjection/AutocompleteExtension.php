@@ -106,6 +106,7 @@ final class AutocompleteExtension extends Extension implements PrependExtensionI
                 new Reference('ux.autocomplete.autocompleter_registry'),
                 new Reference('ux.autocomplete.results_executor'),
                 new Reference('router'),
+                new Reference('uri_signer'),
             ])
             ->addTag('controller.service_arguments')
         ;
@@ -125,6 +126,7 @@ final class AutocompleteExtension extends Extension implements PrependExtensionI
             ->register('ux.autocomplete.entity_type', ParentEntityAutocompleteType::class)
             ->setArguments([
                 new Reference('router'),
+                new Reference('uri_signer'),
             ])
             ->addTag('form.type');
 
