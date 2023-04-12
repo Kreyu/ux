@@ -26,6 +26,7 @@ use Symfony\UX\Autocomplete\Doctrine\EntityMetadataFactory;
 use Symfony\UX\Autocomplete\Doctrine\EntitySearchUtil;
 use Symfony\UX\Autocomplete\Form\AsEntityAutocompleteField;
 use Symfony\UX\Autocomplete\Form\AutocompleteChoiceTypeExtension;
+use Symfony\UX\Autocomplete\Form\AutocompleteEntityTypeExtension;
 use Symfony\UX\Autocomplete\Form\ParentEntityAutocompleteType;
 use Symfony\UX\Autocomplete\Form\WrappedEntityTypeAutocompleter;
 use Symfony\UX\Autocomplete\Maker\MakeAutocompleteField;
@@ -135,6 +136,10 @@ final class AutocompleteExtension extends Extension implements PrependExtensionI
             ->addTag('form.type_extension');
 
         $container
+            ->register('ux.autocomplete.entity_type_extension', AutocompleteEntityTypeExtension::class)
+            ->addTag('form.type_extension');
+
+        $container
             ->register('ux.autocomplete.wrapped_entity_type_autocompleter', WrappedEntityTypeAutocompleter::class)
             ->setAbstract(true)
             ->setArguments([
@@ -143,6 +148,7 @@ final class AutocompleteExtension extends Extension implements PrependExtensionI
                 new Reference('ux.autocomplete.entity_metadata_factory'),
                 new Reference('property_accessor'),
                 new Reference('ux.autocomplete.entity_search_util'),
+                new Reference('request_stack'),
             ]);
     }
 }

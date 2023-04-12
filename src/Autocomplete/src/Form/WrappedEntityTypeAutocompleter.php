@@ -7,6 +7,7 @@ use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\Form\ChoiceList\Factory\Cache\ChoiceLabel;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyAccess\PropertyPathInterface;
 use Symfony\Component\Security\Core\Security;
@@ -30,7 +31,8 @@ final class WrappedEntityTypeAutocompleter implements EntityAutocompleterInterfa
         private FormFactoryInterface $formFactory,
         private EntityMetadataFactory $metadataFactory,
         private PropertyAccessorInterface $propertyAccessor,
-        private EntitySearchUtil $entitySearchUtil
+        private EntitySearchUtil $entitySearchUtil,
+        private RequestStack $requestStack,
     ) {
     }
 
@@ -45,7 +47,7 @@ final class WrappedEntityTypeAutocompleter implements EntityAutocompleterInterfa
         $queryBuilder = $queryBuilder ?: $repository->createQueryBuilder('entity');
 
         if ($filterQuery = $this->getFilterQuery()) {
-            $filterQuery($queryBuilder, $query, $repository);
+            $filterQuery($queryBuilder, $query, $repository, $this->getQueryContext());
 
             return $queryBuilder;
         }
@@ -123,7 +125,9 @@ final class WrappedEntityTypeAutocompleter implements EntityAutocompleterInterfa
     private function getForm(): FormInterface
     {
         if (null === $this->form) {
-            $this->form = $this->formFactory->create($this->formType);
+            $this->form = $this->formFactory->create($this->formType, options: [
+                'query_context' => $this->getQueryContext(),
+            ]);
         }
 
         return $this->form;
@@ -142,6 +146,11 @@ final class WrappedEntityTypeAutocompleter implements EntityAutocompleterInterfa
     private function getMaxResults(): ?int
     {
         return $this->getForm()->getConfig()->getOption('max_results');
+    }
+
+    private function getQueryContext(): array
+    {
+        return $this->requestStack->getCurrentRequest()?->get('query_context') ?? [];
     }
 
     private function getEntityMetadata(): EntityMetadata

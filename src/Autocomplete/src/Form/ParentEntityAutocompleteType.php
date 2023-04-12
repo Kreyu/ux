@@ -43,6 +43,7 @@ final class ParentEntityAutocompleteType extends AbstractType implements DataMap
         // Use the provided URL, or auto-generate from the provided alias
         $autocompleteUrl = $options['autocomplete_url'] ?? $this->urlGenerator->generate($attribute->getRoute(), [
             'alias' => $attribute->getAlias() ?: AsEntityAutocompleteField::shortName(\get_class($formType)),
+            'query_context' => $options['query_context'],
         ]);
 
         $builder
@@ -78,12 +79,15 @@ final class ParentEntityAutocompleteType extends AbstractType implements DataMap
             'security' => false,
             // set the max results number that a query on automatic endpoint return.
             'max_results' => 10,
+            // pass additional data to "query_builder" and "filter_query" options
+            'query_context' => [],
         ]);
 
         $resolver->setRequired(['class']);
         $resolver->setAllowedTypes('security', ['boolean', 'string', 'callable']);
         $resolver->setAllowedTypes('max_results', ['int', 'null']);
         $resolver->setAllowedTypes('filter_query', ['callable', 'null']);
+        $resolver->setAllowedTypes('query_context', 'array');
         $resolver->setNormalizer('searchable_fields', function (Options $options, ?array $searchableFields) {
             if (null !== $searchableFields && null !== $options['filter_query']) {
                 throw new RuntimeException('Both the searchable_fields and filter_query options cannot be set.');
